@@ -3,6 +3,7 @@
 namespace classes\logs;
 
 use classes\Pessoa;
+use classes\Medico;
 
 class Relatorio {
 

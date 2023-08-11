@@ -1,0 +1,17 @@
+{
+    "name": "lucaslima/semana_3",
+    "description": "Semana 3",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Lucaslima\\Semana3\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Lucas",
+            "email": "lucasconceicao@hotmail.com"
+        }
+    ],
+    "require": {}
+}

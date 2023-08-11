@@ -29,11 +29,11 @@ class Medico extends Pessoa implements iFuncionario{
 	}
 
 	public function mostrarSalario(){
-		echo "Salário: R$ " . getSalario() . ".\n";
+		echo "Salário: R$ " . $this->getSalario() . ".\n";
 	}
 
 	public function mostrarTempoContrato(){
-		echo "Contrado de" . getContrato() . "anos.\n";
+		echo "Contrato de " . $this->getContrato() . " anos.\n";
 	}
 
 	public function __toString()
