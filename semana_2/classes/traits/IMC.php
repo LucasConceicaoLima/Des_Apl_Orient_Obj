@@ -37,7 +37,39 @@ namespace classes\traits;
                 } else {
                     echo "IMC inadequado.\n";
                 }
-            }
         }
 
+        public function isNormal2() {
+            $ageRanges = [
+                [19, 24],
+                [25, 34],
+                [35, 44],
+                [45, 54],
+                [55, 64],
+                [65, PHP_INT_MAX], // Assuming 65+ age is considered the same range
+            ];
+            
+            $imcRanges = [
+                [19, 24],
+                [20, 25],
+                [21, 26],
+                [22, 27],
+                [23, 28],
+                [24, 29],
+            ];
+            
+            foreach ($ageRanges as $i => $ageRange) {
+                [$minAge, $maxAge] = $ageRange;
+                [$minImc, $maxImc] = $imcRanges[$i];
+                
+                if ($this->idade >= $minAge && $this->idade <= $maxAge && $this->imc >= $minImc && $this->imc <= $maxImc) {
+                    return true;
+                }
+            }
+            
+            echo "IMC inadequado.\n";
+            return false;
+        }
+        
+    }
 ?>
