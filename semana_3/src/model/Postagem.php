@@ -4,17 +4,13 @@ namespace Daoo\Aula03\model;
 
 use Exception;
 
-class Produto extends Model implements iDAO
-{
-    private $id, $nome, $descricao,
-        $quantidadeEstoque, $preco, $importado;
-
+class Postagem extends Model implements iDAO{
+    private $id, $titulo, $conteudo, $data_postagem;
+    
     public function __construct(
-        $nome = '',
-        $descricao = '',
-        $quantidade = 0,
-        $preco = 0,
-        $importado = false
+        $titulo = '',
+        $conteudo = '',
+        $data_postagem = ''
     ) {
         try{
             parent::__construct();
@@ -22,32 +18,27 @@ class Produto extends Model implements iDAO
             throw $error;
         }
 
-        $this->table = 'produtos';
-        $this->primary = 'id_prod';
-        $this->nome = $nome;
-        $this->descricao = $descricao;
-        $this->quantidadeEstoque = $quantidade;
-        $this->preco = $preco;
-        $this->importado = $importado;
+        $this->table = 'postagem';
+        $this->primary = 'id';
+        $this->titulo = $titulo;
+        $this->conteudo = $conteudo;
+        $this->data_postagem = $data_postagem;
         $this->mapColumns($this);
     }
 
-    public function read($id = null)
-    {
-        try {
-            if(isset($id)) 
+    public function read($id = null){
+        try{
+            if(isset($id)){
                 return $this->selectById($id);
-            
-           return $this->select();
-
-        } catch (\Exception $error) {
+            }
+            return $this->select();
+        } catch (\Exception $error){
             error_log("ERRO: " . print_r($error, TRUE));
             throw new Exception($error->getMessage());
         }
     }
 
-    public function create()
-    {
+    public function create(){
         try {
             $sql = "INSERT INTO $this->table ($this->columns) "
                 . "VALUES ($this->params)";
@@ -63,7 +54,7 @@ class Produto extends Model implements iDAO
             $result = $prepStmt->execute($this->values);
             
             if(!$result || $prepStmt->rowCount() != 1)
-                throw new Exception("Erro ao inserir produto!!");
+                throw new Exception("Erro ao inserir postagem!!");
 
             $this->id = $this->conn->lastInsertId();
             $this->dumpQuery($prepStmt);
@@ -75,15 +66,12 @@ class Produto extends Model implements iDAO
         }
     }
 
-    public function update()
-    {
-        try {
+    public function update(){
+       try {
             $this->values[':id'] = $this->id;
             $sql = "UPDATE $this->table SET $this->updated
                   WHERE $this->primary = :id";
             $prepStmt = $this->conn->prepare($sql);
-           
-            $prepStmt->bindValue(':importado', $this->importado);
            
             if ($prepStmt->execute($this->values)) {
                 $this->dumpQuery($prepStmt);
@@ -93,20 +81,18 @@ class Produto extends Model implements iDAO
             error_log("ERRO: " . print_r($error, TRUE));
             $this->dumpQuery($prepStmt);
             return false;
-        }
+        } 
     }
 
-    public function delete($id)
-    {
-        $sql = "DELETE FROM $this->table WHERE id_prod = :id";
+    public function delete($id){
+        $sql = "DELETE FROM $this->table WHERE $this->primary = :id";
         $prepStmt = $this->conn->prepare($sql);
         if ($prepStmt->execute([':id' => $id]))
             return $prepStmt->rowCount() > 0;
         else return false;
     }
 
-    public function filter($arrayFilter)
-    {
+    public function filter($arrayFilter){
         try {
             if (!sizeof($arrayFilter))
                 throw new \Exception("Filtros vazios!");
@@ -125,16 +111,13 @@ class Produto extends Model implements iDAO
         }
     }
 
-    public function getColumns(): array
-    {
+    public function getColumns(): array {
         $columns = [
-            "nome" => $this->nome,
-            "descricao" => $this->descricao,
-            "qtd_estoque" => $this->quantidadeEstoque,
-            "preco" => $this->preco,
-            "importado" => $this->importado
+            "titulo" => $this->titulo,
+            "conteudo" => $this->conteudo,
+            "data_postagem" => $this->data_postagem
         ];
-        if($this->id) $columns['id_prod']=$this->id;
+        if($this->id) $columns['id']=$this->id;
         return $columns;
     }
 
@@ -147,37 +130,5 @@ class Produto extends Model implements iDAO
     public function __get($name)
     {
         return $this->$name;
-    }
-
-    public function insertProdWithDesc($array_ids_desc)
-    {
-        try{
-            $this->conn->beginTransaction();
-            if(!$this->create())
-                throw new \PDOException("Erro ao inserir Produto!!!");
-            $this->id = $this->lastId();
-            $sql = "INSERT INTO prod_desc (id_prod, id_desc) 
-                    VALUES (:new_prod_id, :id_desc)";
-            $prepStmt = $this->conn->prepare($sql);
-            foreach($array_ids_desc as $id_desc){
-                $params = [
-                    ':new_prod_id'=>$this->id,
-                    ':id_desc'=>$id_desc
-                ];
-                if(!$prepStmt->execute($params)){
-                    error_log(print_r($params,true));
-                    throw new \PDOException("ERRO: ".$prepStmt->errorCode());
-                }
-                $this->dumpQuery($prepStmt);
-            }
-            $this->conn->commit();
-            return true;
-        }catch(\PDOException $error){
-            $this->id = null;
-            error_log($error->getMessage());
-            $prepStmt ?? $this->dumpQuery($prepStmt);
-            $this->conn->rollBack();
-            return false;
-        }
     }
 }

@@ -1,121 +1,124 @@
 <?php
 
 namespace Daoo\Aula03\model;
-namespace PHP\Des_Apl_Orient_Obj\semana_3\src\model;
 
 use Exception;
 
-class usuario extends ORM implements iDAO {
-
-    private $id, $nome, $email, $senha, $tipo, $especificidade;
-
+class User extends Model implements iDAO{
+    private $id, $nome, $email, $senha;
+    
     public function __construct(
         $nome = '',
         $email = '',
-        $senha = '',
-        $tipo = '',
-        $especificidade = ''
+        $senha = ''
     ) {
-        parent::__construct();
+        try{
+            parent::__construct();
+        }catch(Exception $error){
+            throw $error;
+        }
 
-        $this->table = 'usuario';
+        $this->table = 'user';
+        $this->primary = 'id';
         $this->nome = $nome;
         $this->email = $email;
         $this->senha = $senha;
-        $this->tipo = $tipo;
-        $this->especificidade = $especificidade;
         $this->mapColumns($this);
     }
 
-    public function read($id = null)
-    {
-        try {
-            if ($id) {
+    public function read($id = null){
+        try{
+            if(isset($id)){
                 return $this->selectById($id);
             }
-            return $this->select([]);
-        } catch (\Exception $error) {
+            return $this->select();
+        } catch (\Exception $error){
             error_log("ERRO: " . print_r($error, TRUE));
             throw new Exception($error->getMessage());
-            // return false;
         }
     }
 
-    public function create()
-    {
+    public function create(){
         try {
             $sql = "INSERT INTO $this->table ($this->columns) "
                 . "VALUES ($this->params)";
 
-            // error_log("ERRO: " . print_r($sql, TRUE));        
-            // throw new Exception($sql);
+            error_log(print_r([
+                "colunas"=>$this->columns,
+                "param"=>$this->params,
+                "valores"=>$this->values,
+                "SQL"=>$sql
+            ],true));
 
             $prepStmt = $this->conn->prepare($sql);
             $result = $prepStmt->execute($this->values);
+            
+            if(!$result || $prepStmt->rowCount() != 1)
+                throw new Exception("Erro ao inserir usuário!!");
+
+            $this->id = $this->conn->lastInsertId();
             $this->dumpQuery($prepStmt);
-            return ($result && $prepStmt->rowCount() == 1);
+            return true;
         } catch (\Exception $error) {
             error_log("ERRO: " . print_r($error, TRUE));
-            if (isset($prepStmt))
-                $this->dumpQuery($prepStmt);
-
+            $prepStmt ?? $this->dumpQuery($prepStmt);
             return false;
         }
     }
 
-    public function update()
-    {
-        try {
+    public function update(){
+       try {
             $this->values[':id'] = $this->id;
-            $sql = "UPDATE $this->table SET $this->updated  WHERE id_prod = :id";
+            $sql = "UPDATE $this->table SET $this->updated
+                  WHERE $this->primary = :id";
             $prepStmt = $this->conn->prepare($sql);
-            $prepStmt->bindValue(':importado', $this->importado);
+           
             if ($prepStmt->execute($this->values)) {
                 $this->dumpQuery($prepStmt);
                 return $prepStmt->rowCount() > 0;
             }
         } catch (\Exception $error) {
             error_log("ERRO: " . print_r($error, TRUE));
+            $this->dumpQuery($prepStmt);
             return false;
-        }
+        } 
     }
 
-    public function delete($id)
-    {
-        $sql = "DELETE FROM $this->table WHERE id_prod = :id";
+    public function delete($id){
+        $sql = "DELETE FROM $this->table WHERE $this->primary = :id";
         $prepStmt = $this->conn->prepare($sql);
         if ($prepStmt->execute([':id' => $id]))
             return $prepStmt->rowCount() > 0;
         else return false;
     }
 
-    public function filter($arrayFilter)
-    {
+    public function filter($arrayFilter){
         try {
-            if (!sizeof($arrayFilter)) die("Filtros vazios!");
+            if (!sizeof($arrayFilter))
+                throw new \Exception("Filtros vazios!");
             $this->setFilters($arrayFilter);
-            $sql = "SELECT * FROM usuario WHERE $this->filters";
-            $preparedStatement = $this->conn->prepare($sql);
-            if ($preparedStatement->execute($this->values))
-                return $preparedStatement->fetchAll(\PDO::FETCH_ASSOC);
-            return false;
+            $sql = "SELECT * FROM $this->table WHERE $this->filters";
+            $prepStmt = $this->conn->prepare($sql);
+            if (!$prepStmt->execute($this->values))
+                return false;
+            $this->dumpQuery($prepStmt);
+            return $prepStmt->fetchAll(self::FETCH);
         } catch (\Exception $error) {
             error_log("ERRO: " . print_r($error, TRUE));
-            if(isset($preparedStatement))
-                $this->dumpQuery($preparedStatement);
+            if(isset($prepStmt))
+                $this->dumpQuery($prepStmt);
             throw new \Exception($error->getMessage());
         }
     }
 
-    public function getColumns(): array
-    {
-        return  [
+    public function getColumns(): array {
+        $columns = [
             "nome" => $this->nome,
             "email" => $this->email,
-            "senha" => $this->senha,
-            "tipo" => $this->tipo,
-            "especificidade" => $this->especificidade
+            "senha" => $this->senha
         ];
+        if($this->id) $columns['id']=$this->id;
+        return $columns;
     }
 
     public function __set($name, $value)
@@ -127,11 +130,5 @@ class usuario extends ORM implements iDAO {
     public function __get($name)
     {
         return $this->$name;
-    }
-
-
-    public function insertProdWithDesc($array_ids_desc)
-    {
-        //implementar transação
     }
 }

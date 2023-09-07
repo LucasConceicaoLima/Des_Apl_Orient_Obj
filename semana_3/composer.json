@@ -1,17 +1,30 @@
 {
-    "name": "lucaslima/semana_3",
-    "description": "Semana 3",
+    "name": "daoo/aula03",
+    "description": "Aula Intro MVC PDO PHP",
     "type": "project",
+    "license": "GPL-3",
     "autoload": {
         "psr-4": {
-            "Lucaslima\\Semana3\\": "src/"
+            "Daoo\\Aula03\\": "src/"
         }
     },
     "authors": [
         {
-            "name": "Lucas",
-            "email": "lucasconceicao@hotmail.com"
+            "name": "Gill Velleda Gonzales",
+            "email": "gillvelleda@gmail.com"
         }
     ],
-    "require": {}
+    "scripts":{
+        "start": "php -S localhost:8080 -t src/"
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "vlucas/phpdotenv": "^5.5@dev"
+    },
+    "config": {
+        "process-timeout": 0
+    },
+    "require-dev": {
+        "psy/psysh": "@stable"
+    }
 }

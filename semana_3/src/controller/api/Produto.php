@@ -8,11 +8,17 @@ use Exception;
 class Produto extends Controller
 {
 
+	private ProdutoModel $model;
+
 	public function __construct()
 	{
-		$this->setHeader();
-		$this->model = new ProdutoModel();
-		// error_log(print_r($this->model, TRUE));
+		try{
+			$this->model = new ProdutoModel();
+			$this->setHeader(200,'');
+		}catch(Exception $error){
+			$this->setHeader(500,"Erro ao conectar ao banco!");
+			json_encode(["error"=>$error->getMessage()]);
+		}	
 	}
 
 	public function index()
@@ -46,19 +52,32 @@ class Produto extends Controller
 
 			$this->model->importado = isset($_POST['importado']);
 
-			// error_log(print_r($this->model,TRUE));
-			// throw new \Exception('LOG');
 
-			if ($this->model->create())
+			if(isset($_POST['descontos'])){
+				error_log("POST PROD-DESC\n".print_r($_POST,TRUE));
+				if(!$this->model->insertProdWithDesc($_POST['descontos'])){
+					$msg = 'Erro ao cadastrar produto!';
+					$this->setHeader(500,$msg);
+					throw new \Exception($msg);
+				}
+				echo json_encode([
+					"success" => "Produto com desconto criado com sucesso!",
+					"data" => $this->model->getColumns()
+				]);
+			}else if ($this->model->create()){
 				echo json_encode([
 					"success" => "Produto criado com sucesso!",
 					"data" => $this->model->getColumns()
 				]);
-			else throw new \Exception("Erro ao criar produto!");
+			}else {
+				$msg = 'Erro ao cadastrar produto!';
+				$this->setHeader(500,$msg);
+   		 		throw new \Exception($msg);
+			}
 		} catch (\Exception $error) {
-			$this->setHeader(500,'Erro interno do servidor!!!!');
 			echo json_encode([
-				"error" => $error->getMessage()
+				"error" => $error->getMessage(),
+				"trace"=> $error->getTrace()
 			]);
 		}
 	}
@@ -88,8 +107,9 @@ class Produto extends Controller
 					"success" => "Produto atualizado com sucesso!",
 					"data" => $this->model->getColumns()
 				]);
-			else throw new \Exception("Erro ao criar produto!");
+			else throw new \Exception("Erro ao atualizar produto!");
 		} catch (\Exception $error) {
+			$this->setHeader(500,'Erro interno do servidor!!!!');
 			echo json_encode([
 				"error" => $error->getMessage()
 			]);
@@ -116,6 +136,15 @@ class Produto extends Controller
 				"error" => $error->getMessage()
 			]);
 		}
+	}
+
+
+	public function filter() : void {
+		
+		if(!isset($_POST))
+		   echo json_encode(["error" => "enviar os filtros"]);
+		$reulsts = $this->model->filter($_POST);
+		echo json_encode($reulsts);
 	}
 
 	private function validateProdutoRequest()
