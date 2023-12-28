@@ -15,7 +15,7 @@
         }
     ],
     "scripts":{
-        "start": "php -S localhost:8080 -t src/"
+        "start": "php -S 127.0.0.1:8080 -t src/"
     },
     "minimum-stability": "dev",
     "require": {
