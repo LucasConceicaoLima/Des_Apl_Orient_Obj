@@ -72,6 +72,7 @@ INSERT INTO `extras` (`id_ext`, `descricao`) VALUES
 --
 
 CREATE TABLE `postagem` (
+  `id` int(11) PRIMARY KEY AUTO_INCREMENT,
   `titulo` varchar(50) NOT NULL,
   `conteudo` text NOT NULL,
   `data_postagem` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
